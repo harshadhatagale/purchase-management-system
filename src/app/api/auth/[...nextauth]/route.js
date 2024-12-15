@@ -9,18 +9,18 @@ const handler = NextAuth({
     CredentialsProvider({
       name: "Credentials",
       credentials: {
-        email: { label: "Email", type: "email" },
+        username: { label: "Username", type: "username" },
         password: { label: "Password", type: "password" },
       },
       async authorize(credentials) {
         await dbConnect();
 
-        const user = await User.findOne({ email: credentials.email }).populate("role");
-
+        const user = await User.findOne({ username: credentials.username }).populate("role");
+        
         if (user && bcrypt.compareSync(credentials.password, user.password)) {
-          return { id: user._id, name: user.name, email: user.email, role: user.role.name };
+          return { id: user._id, name: user.name, username: user.username, email: user.email, role: user.role.name };
         }
-        throw new Error("Invalid email or password");
+        throw new Error("Invalid username or password");
       },
     }),
   ],
@@ -29,13 +29,13 @@ const handler = NextAuth({
   },
   callbacks: {
     async session({ session, token }) {
-      session.user = { id: token.id, email: token.email, role: token.role };
+      session.user = { id: token.id, username: token.username, role: token.role };
       return session;
     },
     async jwt({ token, user }) {
       if (user) {
         token.id = user.id;
-        token.email = user.email;
+        token.username = user.username;
         token.role = user.role;
       }
       return token;
